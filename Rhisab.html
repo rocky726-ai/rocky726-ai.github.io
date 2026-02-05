@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Station Shift Checkout System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            text-align: center;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .section-title {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 5px 5px 0 0;
+            font-weight: bold;
+        }
+        
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 150px;
+            margin: 5px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #34495e;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        
+        .calc-field {
+            background-color: #ecf0f1;
+            font-weight: bold;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+        
+        th, td {
+            border: 1px solid #bdc3c7;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .total-row {
+            background-color: #34495e !important;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-print {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .btn-print:hover {
+            background-color: #8e44ad;
+        }
+        
+        .footer-note {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-container, .print-container * {
+                visibility: visible;
+            }
+            
+            .print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .print-only {
+                display: block;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+        }
+        
+        .discrepancy {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .match {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .pump-row:hover {
+            background-color: #e8f4fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container no-print">
+        <header>
+            <h1>FUEL FORECOURT OPERATIONS - DSM SHIFT CHECKOUT</h1>
+            <div class="subtitle">Digital Shift Reconciliation System</div>
+        </header>
+        
+        <div class="form-section">
+            <div class="section-title">SHIFT INFORMATION</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="dsmName">DSM Name</label>
+                    <input type="text" id="dsmName" placeholder="Enter DSM Name">
+                </div>
+                <div class="input-group">
+                    <label for="shiftDate">Date</label>
+                    <input type="date" id="shiftDate" value="">
+                </div>
+                <div class="input-group">
+                    <label for="shiftTime">Shift Time</label>
+                    <select id="shiftTime">
+                        <option value="Morning">Morning (6 AM - 2 PM)</option>
+                        <option value="Evening">Evening (2 PM - 10 PM)</option>
+                        <option value="Night">Night (10 PM - 6 AM)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">FUEL DISPENSER READINGS</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>HSD Rate (₹/Ltr)</label>
+                    <input type="number" id="hsdRate" min="0" step="0.01" value="87.50">
+                </div>
+                <div class="input-group">
+                    <label>MS Rate (₹/Ltr)</label>
+                    <input type="number" id="msRate" min="0" step="0.01" value="96.20">
+                </div>
+                <div class="input-group">
+                    <label>Lubes Rate (₹/Ltr)</label>
+                    <input type="number" id="lubesRate" min="0" step="0.01" value="180.00">
+                </div>
+            </div>
+            
+            <table id="dispenserTable">
+                <thead>
+                    <tr>
+                        <th>R.O. Location</th>
+                        <th>Opening (Ltrs)</th>
+                        <th>Closing (Ltrs)</th>
+                        <th>Pump Test (Ltrs)</th>
+                        <th>Own Use (Ltrs)</th>
+                        <th>Net Dispensed (Ltrs)</th>
+                        <th>Rate (₹/Ltr)</th>
+                        <th>Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="dispenserBody">
+                    <!-- Rows will be generated by JavaScript -->
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td>TOTAL SALES</td>
+                        <td colspan="4"></td>
+                        <td id="totalDispensed">0.00</td>
+                        <td></td>
+                        <td id="totalSales">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">CASH COLLECTION</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Shift Starting Cash</label>
+                    <input type="number" id="shiftStartCash" min="0" step="0.01" value="5000.00">
+                </div>
+            </div>
+            
+            <table id="cashTable">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th>1st Drop</th>
+                        <th>2nd Drop</th>
+                        <th>3rd Drop</th>
+                        <th>4th Drop</th>
+                        <th>Last Drop</th>
+                        <th>Total Drop</th>
+                        <th>Less: Shift Starting</th>
+                        <th>Net Collection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cash Envelopes</td>
+                        <td><input type="number" class="cash-drop" data-drop="1" min="0" step="0.01" value="0"></td>
+                        <td><input type="number" class="cash-drop" data-drop="2" min="0" step="0.01" value="0"></td>
+                        <td><input type="number" class="cash-drop" data-drop="3" min="0" step="0.01" value="0"></td>
+                        <td><input type="number" class="cash-drop" data-drop="4" min="0" step="0.01" value="0"></td>
+                        <td><input type="number" class="cash-drop" data-drop="5" min="0" step="0.01" value="0"></td>
+                        <td id="totalDrop" class="calc-field">0.00</td>
+                        <td id="shiftStartDisplay" class="calc-field">5000.00</td>
+                        <td id="netCashCollection" class="calc-field">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">OTHER MODES OF PAYMENT</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Fleet Card Sale (₹)</label>
+                    <input type="number" id="fleetCardSale" min="0" step="0.01" value="0">
+                </div>
+                <div class="input-group">
+                    <label>Credit Card Sale (₹)</label>
+                    <input type="number" id="creditCardSale" min="0" step="0.01" value="0">
+                </div>
+                <div class="input-group">
+                    <label>Any Other Approved (₹)</label>
+                    <input type="number" id="otherSale" min="0" step="0.01" value="0">
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">RECONCILIATION</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Total Sales (A) - From Fuel Dispensers</label>
+                    <div id="reconTotalSales" class="calc-field">0.00</div>
+                </div>
+                <div class="input-group">
+                    <label>Total Collection (B+C+D+E)</label>
+                    <div id="reconTotalCollection" class="calc-field">0.00</div>
+                </div>
+                <div class="input-group">
+                    <label>Shortage/Overage (F-A)</label>
+                    <div id="shortageOverage" class="calc-field">0.00</div>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Sale Record in HHT/System (₹)</label>
+                    <input type="number" id="hhtSale" min="0" step="0.01" value="0">
+                </div>
+                <div class="input-group">
+                    <label>Difference: System vs Actual Sale</label>
+                    <div id="systemDifference" class="calc-field">0.00</div>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Remarks</label>
+                    <input type="text" id="remarks" placeholder="Enter any remarks...">
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-primary" id="calculateBtn">Calculate Totals</button>
+            <button class="btn-secondary" id="clearBtn">Clear Form</button>
+            <button class="btn-print" id="printBtn">Generate & Print Report</button>
+        </div>
+        
+        <div class="footer-note">
+            <p>I have double checked all my Cash for accuracy and authorization of credit card and fleet card slips before dropping the envelopes.</p>
+            <p>*Item wise invoice to be prepared in HHT/System for the differential Amount.</p>
+        </div>
+    </div>
+    
+    <!-- Printable Report Container -->
+    <div class="print-container print-only" id="printContainer">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin-bottom: 5px;">FUEL FORECOURT OPERATIONS</h2>
+            <h3 style="margin-top: 0; color: #555;">DSM SHIFT CHECK OUT SHEET</h3>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <table style="width: 100%; margin-bottom: 10px;">
+                <tr>
+                    <td><strong>DSM Name:</strong> <span id="printDsmName"></span></td>
+                    <td><strong>Date:</strong> <span id="printDate"></span></td>
+                    <td><strong>Shift:</strong> <span id="printShift"></span></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h4 style="background-color: #333; color: white; padding: 5px;">(A) TOTALISER READING</h4>
+            <table id="printDispenserTable" style="width: 100%; font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th>R.O. Location</th>
+                        <th>Closing Reading (Ltrs)</th>
+                        <th>Opening Reading (Ltrs)</th>
+                        <th>Dispensed Qty. (Ltrs)</th>
+                        <th>Pump Test Qty. (Ltrs)</th>
+                        <th>Own Use Qty. (Ltrs)</th>
+                        <th>Net Dispersed Qty. (Ltrs)</th>
+                        <th>Rate (Rs. Per Ltr)</th>
+                        <th>Amount (Rs. Per Ltr)</th>
+                    </tr>
+                </thead>
+                <tbody id="printDispenserBody">
+                    <!-- Printed rows will be inserted here -->
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #eee; font-weight: bold;">
+                        <td colspan="6">TOTAL SALES</td>
+                        <td id="printTotalDispensed">0.00</td>
+                        <td></td>
+                        <td id="printTotalSales">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h4 style="background-color: #333; color: white; padding: 5px;">(B) CASH COLLECTION</h4>
+            <table id="printCashTable" style="width: 100%; font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th>1st Drop</th>
+                        <th>2nd Drop</th>
+                        <th>3rd Drop</th>
+                        <th>4th Drop</th>
+                        <th>Last Drop</th>
+                        <th>Total Drop</th>
+                        <th>Less: Shift Starting</th>
+                        <th>Net Collection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cash Envelopes</td>
+                        <td id="printDrop1">0.00</td>
+                        <td id="printDrop2">0.00</td>
+                        <td id="printDrop3">0.00</td>
+                        <td id="printDrop4">0.00</td>
+                        <td id="printDrop5">0.00</td>
+                        <td id="printTotalDrop">0.00</td>
+                        <td id="printShiftStart">5000.00</td>
+                        <td id="printNetCash">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h4 style="background-color: #333; color: white; padding: 5px;">OTHER PAYMENTS</h4>
+            <table style="width: 100%; font-size: 12px;">
+                <tr>
+                    <td><strong>(C) FLEET CARD SALE:</strong> ₹<span id="printFleetCard">0.00</span></td>
+                    <td><strong>(D) CREDIT CARD SALE:</strong> ₹<span id="printCreditCard">0.00</span></td>
+                    <td><strong>(E) ANY OTHER APPROVED:</strong> ₹<span id="printOtherSale">0.00</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>(F) TOTAL COLLECTION FOR ALL MOP's (B+C+D+E):</strong> ₹<span id="printTotalCollection">0.00</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>(G) SHORTAGE/OVERAGE (F-A):</strong> ₹<span id="printShortage">0.00</span></td>
+                </tr>
+                <tr>
+                    <td><strong>(H) SALE RECORD IN HHT/SYSTEM:</strong> ₹<span id="printHhtSale">0.00</span></td>
+                    <td colspan="2"><strong>(I) DIFFERENCE-SALE BOOKED IN SYSTEM & ACTUAL SALE (H-A):</strong> ₹<span id="printSystemDiff">0.00</span></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <p><strong>Remarks:</strong> <span id="printRemarks"></span></p>
+            
+            <div style="margin-top: 40px;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="width: 50%;">
+                            <div style="border-top: 1px solid #000; padding-top: 10px; width: 80%;">
+                                <strong>Signature:</strong>
+                            </div>
+                        </td>
+                        <td style="width: 50%;">
+                            <div style="border-top: 1px solid #000; padding-top: 10px; width: 80%;">
+                                <strong>Shift Supervisor Name:</strong>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #777;">
+                <p>I have double checked all my Cash for accuracy and authorization of credit card and fleet card slips before dropping the envelopes.</p>
+                <p>*Item wise invoice to be prepared in HHT/System for the differential Amount.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default date to today
+        document.getElementById('shiftDate').valueAsDate = new Date();
+        
+        // Fuel dispenser data
+        const dispenserData = [
+            { id: 'hsd1', name: 'HSD-(Nozzle-No. - 1)', rateId: 'hsdRate', type: 'HSD' },
+            { id: 'hsd2', name: 'HSD-(Nozzle-No. - 2)', rateId: 'hsdRate', type: 'HSD' },
+            { id: 'hsd3', name: 'HSD-(Nozzle-No. - 3)', rateId: 'hsdRate', type: 'HSD' },
+            { id: 'hsd4', name: 'HSD-(Nozzle-No. - 4)', rateId: 'hsdRate', type: 'HSD' },
+            { id: 'hsd5', name: 'HSD-(Nozzle-No. - 5)', rateId: 'hsdRate', type: 'HSD' },
+            { id: 'hsd6', name: 'HSD-(Nozzle-No. - 6)', rateId: 'hsdRate', type: 'HSD' },
+            { id: 'ms7', name: 'MS - (Nozzle-No. - 7)', rateId: 'msRate', type: 'MS' },
+            { id: 'ms8', name: 'MS - (Nozzle-No. - 8)', rateId: 'msRate', type: 'MS' },
+            { id: 'ms9', name: 'MS - (Nozzle-No. - 9)', rateId: 'msRate', type: 'MS' },
+            { id: 'ms10', name: 'MS - (Nozzle-No. - 10)', rateId: 'msRate', type: 'MS' },
+            { id: 'lubes1', name: 'Lubes - 1', rateId: 'lubesRate', type: 'Lubes' },
+            { id: 'lubes2', name: 'Lubes - 2', rateId: 'lubesRate', type: 'Lubes' },
+            { id: 'lubes3', name: 'Lubes - 3', rateId: 'lubesRate', type: 'Lubes' },
+            { id: 'lubes4', name: 'Lubes - 4', rateId: 'lubesRate', type: 'Lubes' },
+            { id: 'lubes5', name: 'Lubes - 5', rateId: 'lubesRate', type: 'Lubes' },
+            { id: 'lubes6', name: 'Lubes - 6', rateId: 'lubesRate', type: 'Lubes' },
+            { id: 'others', name: 'Others', rateId: 'lubesRate', type: 'Others' }
+        ];
+        
+        // Initialize dispenser table
+        function initializeDispenserTable() {
+            const tableBody = document.getElementById('dispenserBody');
+            tableBody.innerHTML = '';
+            
+            dispenserData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'pump-row';
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td><input type="number" class="opening-reading" data-id="${item.id}" min="0" step="0.01" value="0"></td>
+                    <td><input type="number" class="closing-reading" data-id="${item.id}" min="0" step="0.01" value="0"></td>
+                    <td><input type="number" class="pump-test" data-id="${item.id}" min="0" step="0.01" value="0"></td>
+                    <td><input type="number" class="own-use" data-id="${item.id}" min="0" step="0.01" value="0"></td>
+                    <td class="net-dispensed" data-id="${item.id}">0.00</td>
+                    <td class="rate-display" data-rate="${item.rateId}">${document.getElementById(item.rateId).value}</td>
+                    <td class="amount" data-id="${item.id}">0.00</td>
+                `;
+                tableBody.appendChild(row);
+                
+                // Add event listeners to inputs
+                const inputs = row.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.addEventListener('input', calculateRow);
+                    input.addEventListener('change', calculateAll);
+                });
+            });
+            
+            // Add event listeners to rate inputs
+            document.getElementById('hsdRate').addEventListener('input', updateAllRates);
+            document.getElementById('msRate').addEventListener('input', updateAllRates);
+            document.getElementById('lubesRate').addEventListener('input', updateAllRates);
+        }
+        
+        // Calculate a single row
+        function calculateRow(e) {
+            const row = e.target.closest('tr');
+            const opening = parseFloat(row.querySelector('.opening-reading').value) || 0;
+            const closing = parseFloat(row.querySelector('.closing-reading').value) || 0;
+            const pumpTest = parseFloat(row.querySelector('.pump-test').value) || 0;
+            const ownUse = parseFloat(row.querySelector('.own-use').value) || 0;
+            const rateDisplay = row.querySelector('.rate-display');
+            const rate = parseFloat(rateDisplay.textContent) || 0;
+            
+            // Calculate dispensed and net dispensed
+            const dispensed = closing - opening;
+            const netDispensed = dispensed - pumpTest - ownUse;
+            
+            // Update row values
+            row.querySelector('.net-dispensed').textContent = netDispensed.toFixed(2);
+            row.querySelector('.amount').textContent = (netDispensed * rate).toFixed(2);
+        }
+        
+        // Calculate all rows and totals
+        function calculateAll() {
+            let totalDispensed = 0;
+            let totalSales = 0;
+            
+            // Calculate each row
+            document.querySelectorAll('.pump-row').forEach(row => {
+                const opening = parseFloat(row.querySelector('.opening-reading').value) || 0;
+                const closing = parseFloat(row.querySelector('.closing-reading').value) || 0;
+                const pumpTest = parseFloat(row.querySelector('.pump-test').value) || 0;
+                const ownUse = parseFloat(row.querySelector('.own-use').value) || 0;
+                const rateDisplay = row.querySelector('.rate-display');
+                const rate = parseFloat(rateDisplay.textContent) || 0;
+                
+                const dispensed = closing - opening;
+                const netDispensed = dispensed - pumpTest - ownUse;
+                const amount = netDispensed * rate;
+                
+                row.querySelector('.net-dispensed').textContent = netDispensed.toFixed(2);
+                row.querySelector('.amount').textContent = amount.toFixed(2);
+                
+                totalDispensed += netDispensed;
+                totalSales += amount;
+            });
+            
+            // Update totals
+            document.getElementById('totalDispensed').textContent = totalDispensed.toFixed(2);
+            document.getElementById('totalSales').textContent = totalSales.toFixed(2);
+            
+            // Calculate cash totals
+            calculateCashTotals();
+            
+            // Calculate reconciliation
+            calculateReconciliation();
+        }
+        
+        // Update all rate displays
+        function updateAllRates() {
+            const hsdRate = document.getElementById('hsdRate').value;
+            const msRate = document.getElementById('msRate').value;
+            const lubesRate = document.getElementById('lubesRate').value;
+            
+            // Update rate displays in table
+            document.querySelectorAll('.rate-display[data-rate="hsdRate"]').forEach(el => {
+                el.textContent = hsdRate;
+            });
+            document.querySelectorAll('.rate-display[data-rate="msRate"]').forEach(el => {
+                el.textContent = msRate;
+            });
+            document.querySelectorAll('.rate-display[data-rate="lubesRate"]').forEach(el => {
+                el.textContent = lubesRate;
+            });
+            
+            // Recalculate all
+            calculateAll();
+        }
+        
+        // Calculate cash totals
+        function calculateCashTotals() {
+            let totalDrop = 0;
+            
+            // Sum all cash drops
+            document.querySelectorAll('.cash-drop').forEach(input => {
+                totalDrop += parseFloat(input.value) || 0;
+            });
+            
+            const shiftStart = parseFloat(document.getElementById('shiftStartCash').value) || 0;
+            const netCollection = totalDrop - shiftStart;
+            
+            // Update display
+            document.getElementById('totalDrop').textContent = totalDrop.toFixed(2);
+            document.getElementById('shiftStartDisplay').textContent = shiftStart.toFixed(2);
+            document.getElementById('netCashCollection').textContent = netCollection.toFixed(2);
+        }
+        
+        // Calculate reconciliation
+        function calculateReconciliation() {
+            const totalSales = parseFloat(document.getElementById('totalSales').textContent) || 0;
+            const netCash = parseFloat(document.getElementById('netCashCollection').textContent) || 0;
+            const fleetCard = parseFloat(document.getElementById('fleetCardSale').value) || 0;
+            const creditCard = parseFloat(document.getElementById('creditCardSale').value) || 0;
+            const otherSale = parseFloat(document.getElementById('otherSale').value) || 0;
+            const hhtSale = parseFloat(document.getElementById('hhtSale').value) || 0;
+            
+            const totalCollection = netCash + fleetCard + creditCard + otherSale;
+            const shortageOverage = totalCollection - totalSales;
+            const systemDifference = hhtSale - totalSales;
+            
+            // Update reconciliation section
+            document.getElementById('reconTotalSales').textContent = totalSales.toFixed(2);
+            document.getElementById('reconTotalCollection').textContent = totalCollection.toFixed(2);
+            document.getElementById('shortageOverage').textContent = shortageOverage.toFixed(2);
+            document.getElementById('systemDifference').textContent = systemDifference.toFixed(2);
+            
+            // Color code shortage/overage
+            const shortageElement = document.getElementById('shortageOverage');
+            if (shortageOverage < 0) {
+                shortageElement.className = 'calc-field discrepancy';
+            } else if (shortageOverage > 0) {
+                shortageElement.className = 'calc-field match';
+            } else {
+                shortageElement.className = 'calc-field';
+            }
+            
+            // Color code system difference
+            const diffElement = document.getElementById('systemDifference');
+            if (systemDifference < 0) {
+                diffElement.className = 'calc-field discrepancy';
+            } else if (systemDifference > 0) {
+                diffElement.className = 'calc-field match';
+            } else {
+                diffElement.className = 'calc-field';
+            }
+        }
+        
+        // Prepare print report
+        function preparePrintReport() {
+            // Basic info
+            document.getElementById('printDsmName').textContent = document.getElementById('dsmName').value || '______________';
+            document.getElementById('printDate').textContent = document.getElementById('shiftDate').value || new Date().toISOString().split('T')[0];
+            document.getElementById('printShift').textContent = document.getElementById('shiftTime').value || 'Morning';
+            
+            // Fuel dispenser table for print
+            const printBody = document.getElementById('printDispenserBody');
+            printBody.innerHTML = '';
+            
+            document.querySelectorAll('.pump-row').forEach(row => {
+                const name = row.cells[0].textContent;
+                const opening = row.querySelector('.opening-reading').value || '0.00';
+                const closing = row.querySelector('.closing-reading').value || '0.00';
+                const dispensed = (parseFloat(closing) - parseFloat(opening)).toFixed(2);
+                const pumpTest = row.querySelector('.pump-test').value || '0.00';
+                const ownUse = row.querySelector('.own-use').value || '0.00';
+                const netDispensed = row.querySelector('.net-dispensed').textContent || '0.00';
+                const rate = row.querySelector('.rate-display').textContent || '0.00';
+                const amount = row.querySelector('.amount').textContent || '0.00';
+                
+                const printRow = document.createElement('tr');
+                printRow.innerHTML = `
+                    <td>${name}</td>
+                    <td>${closing}</td>
+                    <td>${opening}</td>
+                    <td>${dispensed}</td>
+                    <td>${pumpTest}</td>
+                    <td>${ownUse}</td>
+                    <td>${netDispensed}</td>
+                    <td>${rate}</td>
+                    <td>${amount}</td>
+                `;
+                printBody.appendChild(printRow);
+            });
+            
+            // Totals for print
+            document.getElementById('printTotalDispensed').textContent = document.getElementById('totalDispensed').textContent;
+            document.getElementById('printTotalSales').textContent = document.getElementById('totalSales').textContent;
+            
+            // Cash collection for print
+            document.getElementById('printDrop1').textContent = document.querySelector('.cash-drop[data-drop="1"]').value || '0.00';
+            document.getElementById('printDrop2').textContent = document.querySelector('.cash-drop[data-drop="2"]').value || '0.00';
+            document.getElementById('printDrop3').textContent = document.querySelector('.cash-drop[data-drop="3"]').value || '0.00';
+            document.getElementById('printDrop4').textContent = document.querySelector('.cash-drop[data-drop="4"]').value || '0.00';
+            document.getElementById('printDrop5').textContent = document.querySelector('.cash-drop[data-drop="5"]').value || '0.00';
+            document.getElementById('printTotalDrop').textContent = document.getElementById('totalDrop').textContent;
+            document.getElementById('printShiftStart').textContent = document.getElementById('shiftStartDisplay').textContent;
+            document.getElementById('printNetCash').textContent = document.getElementById('netCashCollection').textContent;
+            
+            // Other payments for print
+            document.getElementById('printFleetCard').textContent = document.getElementById('fleetCardSale').value || '0.00';
+            document.getElementById('printCreditCard').textContent = document.getElementById('creditCardSale').value || '0.00';
+            document.getElementById('printOtherSale').textContent = document.getElementById('otherSale').value || '0.00';
+            
+            // Reconciliation for print
+            document.getElementById('printTotalCollection').textContent = document.getElementById('reconTotalCollection').textContent;
+            document.getElementById('printShortage').textContent = document.getElementById('shortageOverage').textContent;
+            document.getElementById('printHhtSale').textContent = document.getElementById('hhtSale').value || '0.00';
+            document.getElementById('printSystemDiff').textContent = document.getElementById('systemDifference').textContent;
+            
+            // Remarks
+            document.getElementById('printRemarks').textContent = document.getElementById('remarks').value || 'None';
+        }
+        
+        // Clear form
+        function clearForm() {
+            if (confirm('Are you sure you want to clear all data?')) {
+                // Clear all inputs
+                document.querySelectorAll('input').forEach(input => {
+                    if (input.type === 'number') {
+                        input.value = '';
+                    } else if (input.type === 'text') {
+                        input.value = '';
+                    }
+                });
+                
+                // Reset rates to default
+                document.getElementById('hsdRate').value = '87.50';
+                document.getElementById('msRate').value = '96.20';
+                document.getElementById('lubesRate').value = '180.00';
+                document.getElementById('shiftStartCash').value = '5000.00';
+                
+                // Reset date to today
+                document.getElementById('shiftDate').valueAsDate = new Date();
+                
+                // Recalculate
+                calculateAll();
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('calculateBtn').addEventListener('click', calculateAll);
+        document.getElementById('clearBtn').addEventListener('click', clearForm);
+        document.getElementById('printBtn').addEventListener('click', function() {
+            preparePrintReport();
+            window.print();
+        });
+        
+        // Add event listeners to cash drops
+        document.querySelectorAll('.cash-drop').forEach(input => {
+            input.addEventListener('input', calculateCashTotals);
+            input.addEventListener('change', calculateReconciliation);
+        });
+        
+        // Add event listeners to other payment inputs
+        document.getElementById('fleetCardSale').addEventListener('input', calculateReconciliation);
+        document.getElementById('creditCardSale').addEventListener('input', calculateReconciliation);
+        document.getElementById('otherSale').addEventListener('input', calculateReconciliation);
+        document.getElementById('hhtSale').addEventListener('input', calculateReconciliation);
+        document.getElementById('shiftStartCash').addEventListener('input', calculateCashTotals);
+        document.getElementById('shiftStartCash').addEventListener('change', calculateReconciliation);
+        
+        // Initialize the table
+        initializeDispenserTable();
+        
+        // Calculate initial totals
+        calculateAll();
+        
+        // Add some sample data for demonstration
+        function addSampleData() {
+            // Add sample dispenser readings
+            document.querySelectorAll('.opening-reading').forEach((input, index) => {
+                input.value = (index * 1000).toFixed(2);
+            });
+            
+            document.querySelectorAll('.closing-reading').forEach((input, index) => {
+                input.value = (index * 1000 + 250).toFixed(2);
+            });
+            
+            // Add sample cash drops
+            document.querySelector('.cash-drop[data-drop="1"]').value = '12500.00';
+            document.querySelector('.cash-drop[data-drop="2"]').value = '9800.00';
+            document.querySelector('.cash-drop[data-drop="5"]').value = '11200.00';
+            
+            // Add sample card sales
+            document.getElementById('fleetCardSale').value = '8500.00';
+            document.getElementById('creditCardSale').value = '6200.00';
+            document.getElementById('hhtSale').value = '48500.00';
+            
+            // Add sample DSM name
+            document.getElementById('dsmName').value = 'Rahul Sharma';
+            
+            // Recalculate
+            calculateAll();
+        }
+        
+        // Uncomment the line below to load sample data on page load for testing
+        // addSampleData();
+    </script>
+</body>
+</html>
