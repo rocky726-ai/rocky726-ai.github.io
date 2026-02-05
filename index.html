@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Station Shift Checkout System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            text-align: center;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .section-title {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 5px 5px 0 0;
+            font-weight: bold;
+        }
+        
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 150px;
+            margin: 5px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #34495e;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        
+        .calc-field {
+            background-color: #ecf0f1;
+            font-weight: bold;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+        
+        th, td {
+            border: 1px solid #bdc3c7;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .total-row {
+            background-color: #34495e !important;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-print {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .btn-print:hover {
+            background-color: #8e44ad;
+        }
+        
+        .footer-note {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-container, .print-container * {
+                visibility: visible;
+            }
+            
+            .print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .print-only {
+                display: block;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+        }
+        
+        .discrepancy {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .match {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .pump-row:hover {
+            background-color: #e8f4fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container no-print">
+        <header>
+            <h1>FUEL FORECOURT OPERATIONS - DSM SHIFT CHECKOUT</h1>
+            <div class="subtitle">Digital Shift Reconciliation System</div>
+        </header>
+        
+        <div class="form-section">
+            <div class="section-title">SHIFT INFORMATION</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="dsmName">DSM Name</label>
+                    <input type="text" id="dsmName" placeholder="Enter DSM Name">
+                </div>
+                <div class="input-group">
+                    <label for="shiftDate">Date</label>
+                    <input type="date" id="shiftDate" value="">
+                </div>
+                <div class="input-group">
+                    <label for="shiftTime">Shift Time</label>
+                    <select id="shiftTime">
+                        <option value="Morning">Morning (6 AM - 2 PM)</option>
+                        <option value="Evening">Evening (2 PM - 10 PM)</option>
+                        <option value="Night">Night (10 PM - 6 AM)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">FUEL DISPENSER READINGS</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>HSD Rate (₹/Ltr)</label>
+                    <input type="number" id="hsdRate" min="0" step="0.01" value="87.50">
+                </div>
+                <div class="input-group">
+                    <label>MS Rate (₹/Ltr)</label>
+                    <input type="number" id="msRate" min="0" step="0.01" value="96.20">
+                </div>
+                <div class="input-group">
+                    <label>Lubes Rate (₹/Ltr)</label>
+                    <input type="number" id="lubesRate" min="0" step="0.01" value="180.00">
+                </div>
+            </div>
+            
+            <table id="dispenserTable">
+                <thead>
+                    <tr>
+                        <th>R.O. Location</th>
+                        <th>Opening (Ltrs)</th>
+                        <th>Closing (Ltrs)</th>
+                        <th>Pump Test (Ltrs)</th>
+                        <th>Own Use (Ltrs)</th>
+                        <th>Net Dispensed (Ltrs)</th>
+                        <th>Rate (₹/Ltr)</th>
+                        <th>Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="dispenserBody">
+                    <!-- Rows will be generated by JavaScript -->
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td>TOTAL SALES</td>
+                        <td colspan="4"></td>
+                        <td id="totalDispensed">0.00</td>
+                        <td></td>
+                        <td id="totalSales">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">CASH COLLECTION</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Shift Starting Cash</label>
+                    <input type="number" id="shiftStartCash" min="0" step="0.01" value="5000.00">
+                </div>
+            </div>
+            
+            <table id="cashTable">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th>1st Drop</th>
+                        <th>2nd Drop</th>
+                        <th>3rd Drop</th>
+                        <th>4th Drop</th>
+                        <th>Last Drop</th>
+                        <th>Total Drop</th>
+                        <th>Less: Shift Starting</th>
+                        <th>Net Collection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cash Envelopes</td>
+                        <td><input type="number" class="cash-drop" data-drop="1" min="0" step="0.01" value="0"></td>
+                        <td><input type="number" class="cash-drop" data-drop="2" min="0" step="0.01" value="0"></td>
+                        <td><input type="number" class="cash-drop" data-drop="3" min="0" step="0.01" value="0"></td>
+                        <td><input type="number" class="cash-drop" data-drop="4" min="0" step="0.01" value="0"></td>
+                        <td><input type="number" class="cash-drop" data-drop="5" min="0" step="0.01" value="0"></td>
+                        <td id="totalDrop" class="calc-field">0.00</td>
+                        <td id="shiftStartDisplay" class="calc-field">5000.00</td>
+                        <td id="netCashCollection" class="calc-field">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">OTHER MODES OF PAYMENT</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Fleet Card Sale (₹)</label>
+                    <input type="number" id="fleetCardSale" min="0" step="0.01" value="0">
+                </div>
+                <div class="input-group">
+                    <label>Credit Card Sale (₹)</label>
+                    <input type="number" id="creditCardSale" min="0" step="0.01" value="0">
+                </div>
+                <div class="input-group">
+                    <label>Any Other Approved (₹)</label>
+                    <input type="number" id="otherSale" min="0" step="0.01" value="0">
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">RECONCILIATION</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Total Sales (A) - From Fuel Dispensers</label>
+                    <div id="reconTotalSales" class="calc-field">0.00</div>
+                </div>
+                <div class="input-group">
+                    <label>Total Collection (B+C+D+E)</label>
+                    <div id="reconTotalCollection" class="calc-field">0.00</div>
+                </div>
+                <div class="input-group">
+                    <label>Shortage/Overage (F-A)</label>
+                    <div id="shortageOverage" class="calc-field">0.00</div>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Sale Record in HHT/System (₹)</label>
+                    <input type="number" id="hhtSale" min="0" step="0.01" value="0">
+                </div>
+                <div class="input-group">
+                    <label>Difference: System vs Actual Sale</label>
+                    <div id="systemDifference" class="calc-field">0.00</div>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Remarks</label>
+                    <input type="text" id="remarks" placeholder="Enter any remarks...">
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-primary" id="calculateBtn">Calculate Totals</button>
+            <button class="btn-secondary" id="clearBtn">Clear Form</button>
+            <button class="btn-print" id="printBtn">Generate & Print Report</button>
+        </div>
+        
+        <div class="footer-note">
+            <p>I have double checked all my Cash for accuracy and authorization of credit card and fleet card slips before dropping the envelopes.</p>
+            <p>*Item wise invoice to be prepared in HHT/System for the differential Amount.</p>
+        </div>
+    </div>
+    
+    <!-- Printable Report Container -->
+    <div class="print-container print-only" id="printContainer">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin-bottom: 5px;">FUEL FORECOURT OPERATIONS</h2>
+            <h3 style="margin-top: 0; color: #555;">DSM SHIFT CHECK OUT SHEET</h3>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <table style="width: 100%; margin-bottom: 10px;">
+                <tr>
+                    <td><strong>DSM Name:</strong> <span id="printDsmName"></span></td>
+                    <td><strong>Date:</strong> <span id="printDate"></span></td>
+                    <td><strong>Shift:</strong> <span id="printShift"></span></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h4 style="background-color: #333; color: white; padding: 5px;">(A) TOTALISER READING</h4>
+            <table id="printDispenserTable" style="width: 100%; font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th>R.O. Location</th>
+                        <th>Closing Reading (Ltrs)</th>
+                        <th>Opening Reading (Ltrs)</th>
+                        <th>Dispensed Qty. (Ltrs)</th>
+                        <th>Pump Test Qty. (Ltrs)</th>
+                        <th>Own Use Qty. (Ltrs)</th>
+                        <th>Net Dispersed Qty. (Ltrs)</th>
+                        <th>Rate (Rs. Per Ltr)</th>
+                        <th>Amount (Rs. Per Ltr)</th>
+                    </tr>
+                </thead>
+                <tbody id="printDispenserBody">
+                    <!-- Printed rows will be inserted here -->
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #eee; font-weight: bold;">
+                        <td colspan="6">TOTAL SALES</td>
+                        <td id="printTotalDispensed">0.00</td>
+                        <td></td>
+                        <td id="printTotalSales">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h4 style="background-color: #333; color: white; padding: 5px;">(B) CASH COLLECTION</h4>
+            <table id="printCashTable" style="width: 100%; font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th>1st Drop</th>
+                        <th>2nd Drop</th>
+                        <th>3rd Drop</th>
+                        <th>4th Drop</th>
+                        <th>Last Drop</th>
+                        <th>Total Drop</th>
+                        <th>Less: Shift Starting</th>
+                        <th>Net Collection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cash Envelopes</td>
+                        <td id="printDrop1">0.00</td>
+                        <td id="printDrop2">0.00</td>
+                        <td id="printDrop3">0.00</td>
+                        <td id="printDrop4">0.00</td>
+                        <td id="printDrop5">0.00</td>
+                        <td id="printTotalDrop">0.00</td>
+                        <td id="printShiftStart">5000.00</td>
+                        <td id="printNetCash">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h4 style="background-color: #333; color: white; padding: 5px;">OTHER PAYMENTS</h4>
+            <table style="width: 100%; font-size: 12px;">
+                <tr>
+                    <td><strong>(C) FLEET CARD SALE:</strong> ₹<span id="printFleetCard">0.00</span></td>
+                    <td><strong>(D) CREDIT CARD SALE:</strong> ₹<span id="printCreditCard">0.00</span></td>
+                    <td><strong>(E) ANY OTHER APPROVED:</strong> ₹<span id="printOtherSale">0.00</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>(F) TOTAL COLLECTION FOR ALL MOP's (B+C+D+E):</strong> ₹<span id="printTotalCollection">0.00</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>(G) SHORTAGE/OVERAGE (F-A):</strong> ₹<span id="printShortage">0.00</span></td>
+                </tr>
+                <tr>
+                    <td><strong>(H) SALE RECORD IN HHT/SYSTEM:</strong> ₹<span id="printHhtSale">0.00</span></td>
+                    <td colspan="2"><strong>(I) DIFFERENCE-SALE BOOKED IN SYSTEM & ACTUAL SALE (H-A):</strong> ₹<span id="printSystemDiff">0.00</span></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <p><strong>Remarks:</strong> <span id="printRemarks"></span></p>
+            
+            <div style="margin-top: 40px;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="width: 50%;">
+                            <div style="border-top: 1px solid #000; padding-top: 10px; width: 80%;">
+                                <strong>Signature:</strong>
+                            </div>
+                        </td>
+                        <td style="width: 50%;">
+                            <div style="border-top: 1px solid #000; padding-top: 10px; width: 80%;">
+                                <strong>Shift Supervisor Name:</strong>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #777;">
+                <p>I have double checked all my Cash for accuracy and authorization of credit card and fleet card slips before dropping the envelopes.</p>
+                <p>*Item wise invoice to be prepared in HHT/System for the differential Amount.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default date to today
+        document.getElementById('shiftDate').valueAsDate = new Date();
+        
+        // Fuel dispenser data
+        const dispenserData = [
+            { id: 'hsd1', name: 'HSD-(Nozzle-No. - 1)', rateId: 'hsdRate', type: 'HSD' },
+            { id: 'hsd2', name: 'HSD-(Nozzle-No. - 2)', rateId: 'hsdRate', type: 'H
